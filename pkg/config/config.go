@@ -112,6 +112,11 @@ type RendererConfig struct {
 	ExcludeHooks   bool                   `yaml:"excludeHooks,omitempty"`
 	NamespacedOnly bool                   `yaml:"namespacedOnly,omitempty"`
 	ForceNamespace string                 `yaml:"forceNamespace,omitempty"`
+	// ForceSubjectNamespace rewrites the namespace of ServiceAccount subjects
+	// on namespace-scoped bindings (e.g. RoleBinding) to ForceNamespace.
+	// Cluster-scoped bindings (e.g. ClusterRoleBinding) are always rewritten
+	// when ForceNamespace is set. Disabled by default.
+	ForceSubjectNamespace bool `yaml:"forceSubjectNamespace,omitempty"`
 }
 
 // ResourceSelector specifies a Kubernetes resource selector

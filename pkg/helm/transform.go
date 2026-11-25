@@ -12,10 +12,11 @@ import (
 )
 
 type manifestTransformer struct {
-	ForceNamespace string
-	Includes       matcher.ResourceMatchers
-	Excludes       matcher.ResourceMatchers
-	NamespacedOnly bool
+	ForceNamespace        string
+	ForceSubjectNamespace bool
+	Includes              matcher.ResourceMatchers
+	Excludes              matcher.ResourceMatchers
+	NamespacedOnly        bool
 }
 
 func (t *manifestTransformer) TransformManifest(manifest io.Reader) (r []*yaml.RNode, err error) {
@@ -115,16 +116,52 @@ func (t *manifestTransformer) applyNamespace(o *yaml.RNode, clusterScopedResourc
 		resID := fmt.Sprintf("apiVersion: %s, kind: %s, name: %s", meta.APIVersion, meta.Kind, meta.Name)
 		*clusterScopedResources = append(*clusterScopedResources, resID)
 	}
-	// Set namespace of ServiceAccount references within a ClusterRoleBinding
-	if !namespaced && knownKind {
-		subjectsList, err := o.Pipe(yaml.Lookup("subjects"))
-		if err == nil {
-			subjects, err := subjectsList.Elements()
-			if err == nil {
-				for _, s := range subjects {
-					_ = s.PipeE(yaml.Lookup(yaml.NamespaceField), yaml.FieldSetter{StringValue: t.ForceNamespace})
-				}
-			}
+	// Set namespace of ServiceAccount references within role bindings
+	if err = t.applySubjectNamespace(o, namespaced, knownKind); err != nil {
+		return err
+	}
+	return nil
+}
+
+// applySubjectNamespace forces the namespace of ServiceAccount subjects onto
+// ForceNamespace. Only subjects of kind ServiceAccount are touched: User and
+// Group subjects are left unchanged. A missing namespace field on a
+// ServiceAccount subject is created, since Kubernetes requires it.
+//
+// Cluster-scoped, known kinds (e.g. ClusterRoleBinding) are rewritten whenever
+// ForceNamespace is set. Namespace-scoped bindings (e.g. RoleBinding) are only
+// rewritten when ForceSubjectNamespace is enabled, to preserve cross-namespace
+// references by default. Resources of unknown kinds are never touched.
+func (t *manifestTransformer) applySubjectNamespace(o *yaml.RNode, namespaced, knownKind bool) error {
+	if t.ForceNamespace == "" || !knownKind {
+		return nil
+	}
+	if namespaced && !t.ForceSubjectNamespace {
+		return nil
+	}
+	subjectsList, err := o.Pipe(yaml.Lookup("subjects"))
+	if err != nil {
+		return err
+	}
+	if subjectsList == nil {
+		return nil
+	}
+	subjects, err := subjectsList.Elements()
+	if err != nil {
+		return err
+	}
+	for _, s := range subjects {
+		kindNode, err := s.Pipe(yaml.Lookup(yaml.KindField))
+		if err != nil {
+			return err
+		}
+		if kindNode == nil || kindNode.YNode().Value != "ServiceAccount" {
+			continue
+		}
+		if err = s.PipeE(
+			yaml.LookupCreate(yaml.ScalarNode, yaml.NamespaceField),
+			yaml.FieldSetter{StringValue: t.ForceNamespace}); err != nil {
+			return err
 		}
 	}
 	return nil

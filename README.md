@@ -233,7 +233,8 @@ It exposes a `Helm` struct that provides a `Render()` function that returns the 
 | `excludeHooks` | `--no-hooks` | If enabled excludes chart hooks from the output. |
 | `namespace` | `--namespace` | Set the namespace used by Helm templates. |
 | `namespacedOnly` | `--namespaced-only` | If enabled fail on known cluster-scoped resources and those of unknown kinds. |
-| `forceNamespace` | `--force-namespace` | Set namespace on all namespaced resources (and those of unknown kinds). |
+| `forceNamespace` | `--force-namespace` | Set namespace on all namespaced resources (and those of unknown kinds). Also rewrites the namespace of ServiceAccount subjects on known cluster-scoped bindings (e.g. ClusterRoleBinding). |
+| `forceSubjectNamespace` | `--force-subject-namespace` | In addition to `forceNamespace`, rewrite the namespace of ServiceAccount subjects on namespace-scoped bindings (e.g. RoleBinding). Only ServiceAccount subjects are changed; User and Group subjects are left untouched. Disabled by default to preserve cross-namespace references. |
 | `outputPath` | `--output` | Path to write the output to. If it ends with `/` a kustomization is generated. (Not supported by the kustomize plugin.) |
 | `outputPathMapping[].outputPath` |  | output path to which all resources should be written that match `resourceSelectors`. (Only supported by the kpt function.) |
 | `outputPathMapping[].selectors[].apiVersion` |  | Selects resources by apiVersion. |

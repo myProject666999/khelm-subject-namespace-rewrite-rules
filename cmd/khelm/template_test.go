@@ -84,6 +84,12 @@ func TestTemplateCommand(t *testing.T) {
 			5, "namespace: forced-namespace",
 		},
 		{
+			"force-namespace with subject namespace switch",
+			[]string{filepath.Join(exampleDir, "namespace"),
+				"--force-namespace=forced-namespace", "--force-subject-namespace"},
+			3, "namespace: forced-namespace",
+		},
+		{
 			"chart-hooks",
 			[]string{filepath.Join(exampleDir, "chart-hooks")},
 			10, "helm.sh/hook",

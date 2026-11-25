@@ -73,6 +73,7 @@ func templateCommand(h *helm.Helm, writer io.Writer) *cobra.Command {
 	f.StringVar(&req.Name, "name", req.Name, "Release name")
 	f.StringVar(&req.Namespace, "namespace", req.Namespace, "Set the installation namespace used by helm templates")
 	f.StringVar(&req.ForceNamespace, "force-namespace", req.ForceNamespace, "Set namespace on all namespaced resources (and those of unknown kinds)")
+	f.BoolVar(&req.ForceSubjectNamespace, "force-subject-namespace", req.ForceSubjectNamespace, "Also rewrite the namespace of ServiceAccount subjects on namespace-scoped role bindings (e.g. RoleBinding) to the forced namespace; ClusterRoleBinding subjects are rewritten with --force-namespace regardless")
 	f.Var((*valuesFlag)(&req.Values), "set", "Set values on the command line (can specify multiple or separate values with commas: key1=val1,key2=val2)")
 	f.StringSliceVarP(&req.ValueFiles, "values", "f", nil, "Specify values in a YAML file or a URL (can specify multiple)")
 	f.StringSliceVar(&req.APIVersions, "api-versions", nil, "Kubernetes api versions used for Capabilities.APIVersions")

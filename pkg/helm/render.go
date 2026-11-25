@@ -96,10 +96,11 @@ func renderChart(chartRequested *chartv2.Chart, req *config.ChartConfig, getters
 	}
 
 	transformer := manifestTransformer{
-		ForceNamespace: req.ForceNamespace,
-		Includes:       inclusions,
-		Excludes:       matcher.FromResourceSelectors(req.Exclude),
-		NamespacedOnly: req.NamespacedOnly,
+		ForceNamespace:        req.ForceNamespace,
+		ForceSubjectNamespace: req.ForceSubjectNamespace,
+		Includes:              inclusions,
+		Excludes:              matcher.FromResourceSelectors(req.Exclude),
+		NamespacedOnly:        req.NamespacedOnly,
 	}
 	chartHookMatcher := matcher.NewChartHookMatcher(transformer.Excludes, !req.ExcludeHooks)
 	transformer.Excludes = chartHookMatcher

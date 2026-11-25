@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -33,4 +34,20 @@ func TestReadGeneratorConfigUnsupportedFieldError(t *testing.T) {
 	defer f.Close()
 	_, err = ReadGeneratorConfig(f)
 	require.Error(t, err)
+}
+
+func TestReadGeneratorConfigForceSubjectNamespace(t *testing.T) {
+	in := strings.NewReader(`apiVersion: khelm.mgoltzsche.github.com/v2
+kind: ChartRenderer
+metadata:
+  name: test
+  namespace: default
+chart: .
+forceNamespace: forced-ns
+forceSubjectNamespace: true
+`)
+	cfg, err := ReadGeneratorConfig(in)
+	require.NoError(t, err)
+	require.Equal(t, "forced-ns", cfg.ForceNamespace)
+	require.True(t, cfg.ForceSubjectNamespace, "forceSubjectNamespace must be parsed as a known field")
 }
